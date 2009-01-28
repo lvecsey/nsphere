@@ -1,0 +1,6 @@
+
+autoreconf --force --install
+./configure ; make
+src/nsphere /path/to/datafile 64000
+
+The above example will plot with 64000 points, and rotate the sphere for you. By default it will plot 8000 points.
