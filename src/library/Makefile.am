@@ -7,4 +7,4 @@ libnsphere_la_DEFINES = cartesian.h polar.h rotation_pack.h nsphere.h rads.h rot
 libnsphere_la_SOURCES = rotate.c coordinate_conversion.c transform_pack.c transform_data.c
 libnsphere_la_CFLAGS = $(AM_CFLAGS)
 libnsphere_la_LDFLAGS = -version-info 0:97:0
-libnsphere_la_LIBS =
+libnsphere_la_LIBS = -lm

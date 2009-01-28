@@ -4,6 +4,6 @@
 #include <math.h>
 
 /* Convert degrees to radians */
-#define rads(x) (((double)(x * 2)) * M_PI / 360.0)
+#define rads(x) (((double)((x) * 2)) * M_PI / 360.0)
 
 #endif

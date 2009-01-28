@@ -25,6 +25,6 @@ AC_CHECK_HEADERS(sys/stat.h)
 
 AC_CHECK_FUNCS(fstat)
 
-AC_CONFIG_FILES([src/library/Makefile src/Makefile Makefile tests/Makefile])
+AC_CONFIG_FILES([src/library/Makefile src/Makefile src/ppm-out/Makefile Makefile tests/Makefile])
 
 AC_OUTPUT

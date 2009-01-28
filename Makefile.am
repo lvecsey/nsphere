@@ -1,2 +1,2 @@
 
-SUBDIRS = src/library src tests
+SUBDIRS = src/library src src/ppm-out tests

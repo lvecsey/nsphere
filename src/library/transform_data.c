@@ -33,7 +33,7 @@ static int attempt_fill(char **buffer, char *bend, struct sample_fill *s, struct
 
   if (!s->filled_bytes) {
 
-    s->sample = *buf; s->filled_bytes++;
+    s->sample = (unsigned char) *buf; s->filled_bytes++;
     buf++;
 
   }
@@ -41,7 +41,7 @@ static int attempt_fill(char **buffer, char *bend, struct sample_fill *s, struct
   if (t->mode && s->filled_bytes==1) {
 
     if (buf < bend) {
-      s->sample |= ((SAMPLE)(*buf) << SHIFTS);
+      s->sample |= ((SAMPLE)((unsigned char)*buf) << SHIFTS);
       s->filled_bytes++;
       buf++;
     }
