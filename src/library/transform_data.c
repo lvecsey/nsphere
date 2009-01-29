@@ -13,70 +13,100 @@ static void apply_polar(struct polar *p, struct transform_pack *t) {
 
   assert(p!=NULL && t!=NULL);
 
-  p->r = sqrt(t->X[2]);
-  p->theta = M_PI * t->X[1];
-  p->phi = 2 * M_PI * t->X[0];
+  p->r = sqrt(t->X[(t->n+2)%3]);
+  p->theta = M_PI * t->X[(t->n+1)%3];
+  p->phi = 2 * M_PI * t->X[t->n];
 
 }
 
 typedef int (*completion_func_t)(struct transform_pack *t, void *extra);
 
-static int attempt_fill(char **buffer, char *bend, struct sample_fill *s, struct transform_pack *t, completion_func_t completion_func, void *extra) {
+static int lag_fill(char **buffer, char *bend, struct sample_fill *s, struct transform_pack *t, completion_func_t completion_func, void *extra) {
 
   char *buf;
 
-  assert(buffer!=NULL);
+  int j;
 
-  assert(completion_func!=NULL);
+  assert(t!=NULL);
 
   buf = *buffer;
 
-  if (!s->filled_bytes) {
+  for (j = t->jcount; j < t->lag; j++) {
 
-    s->sample = (unsigned char) *buf; s->filled_bytes++;
-    buf++;
+    if (!s->filled_bytes) {
 
-  }
-
-  if (t->mode && s->filled_bytes==1) {
-
-    if (buf < bend) {
-      s->sample |= ((SAMPLE)((unsigned char)*buf) << SHIFTS);
-      s->filled_bytes++;
+      s->sample = (unsigned char) *buf; s->filled_bytes++;
       buf++;
-    }
-    else {
-      *buffer = buf;
-      return 0;
-    }
-  }
-
-  assert_transform_pack(t);
-
-  if ((t->mode && s->filled_bytes==2) || ((!t->mode) && s->filled_bytes==1)) {
-
-    *t->x = s->sample / t->srange;
-
-    t->x = (t->x + 1 >= t->xend) ? t->X : t->x + 1;
-
-    s->filled_bytes = 0;
-    
-    if (t->x == t->X && !t->sr) {
-
-      completion_func(t, extra);
-
-      t->x = t->X;
 
     }
-    
-    if (t->skip) {
-      t->sr = (t->sr >= t->skip) ? 0 : (t->sr + 1);
+
+    if (t->mode && s->filled_bytes==1) {
+
+      if (buf < bend) {
+	s->sample |= ((SAMPLE)((unsigned char)*buf) << SHIFTS);
+	s->filled_bytes++;
+	buf++;
+      }
+      else {
+	break;
+      }
+
     }
 
   }
 
   *buffer = buf;
-  
+
+  t->jcount = (j == t->lag) ? 0 : j;
+
+  return 0;
+
+}
+
+static int preload_fill(char **buffer, char *bend, struct sample_fill *s, struct transform_pack *t, completion_func_t completion_func, void *extra) {
+
+  int i;
+
+  assert(t!=NULL);
+
+  for (i = t->icount; i < 3; i++) {
+
+    lag_fill(buffer, bend, s, t, completion_func, extra);
+
+  }
+
+  assert(i <= 3);
+
+  if (i == 3) {
+    t->state |= HAVE_PREFILL;
+  }
+
+  return 0;
+
+}
+
+static int process_point(char **buffer, char *bend, struct sample_fill *s, struct transform_pack *t, completion_func_t completion_func, void *extra) {
+
+  assert(t!=NULL && s!=NULL);
+
+  assert(completion_func != NULL);
+
+  t->X[t->n] = (s->sample == 0) ? 0 : s->sample / t->srange;
+
+  s->filled_bytes = 0;
+    
+  t->n = (t->n+1) % 3;
+
+  if (!t->sr) {
+
+    completion_func(t, extra);
+
+  }
+    
+  if (t->skip) {
+    t->sr = (t->sr >= t->skip) ? 0 : (t->sr + 1);
+  }
+
   return 0;
 
 }
@@ -142,13 +172,23 @@ int transform_data(struct transform_pack *t, char *buf, int len, struct polar *p
 
   pwp.pend = *pend;
 
-  for ( ; buf < bend; buf++) {
+  while ( buf < bend ) {
 
-    attempt_fill(&buf, bend, s, t, completion_function, &pwp);
+    if (! (t->state & HAVE_PREFILL)) {
 
-    for ( ; j < t->lag; j++) {
-      buf++;
+      preload_fill(&buf, bend, s, t, completion_function, &pwp);
+
+      continue;
+
     }
+
+    if ((t->mode && s->filled_bytes==2) || ((!t->mode) && s->filled_bytes==1)) {
+
+      process_point(&buf, bend, s, t, completion_function, &pwp);
+
+    }
+
+    lag_fill(&buf, bend, s, t, completion_function, &pwp);
 
   }
 

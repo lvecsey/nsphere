@@ -236,6 +236,7 @@ int plot_file(char* name)
                 tmp = fgetc(inpu); byte |= ((SAMPLE)(tmp) << SHIFTS);
          }
          X[n] = byte / SRANGE;
+         n = (n+1) % 3;
      }
   }
   do

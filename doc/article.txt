@@ -1,0 +1,6 @@
+
+  Pickover, Clifford A. 1995. "Random number generators: pretty good
+    ones are easy to find."  The Visual Computer (1005) 11:369-377.
+
+  See also Pickover, nd., "Keys to Infinity." Chapter 31.
+

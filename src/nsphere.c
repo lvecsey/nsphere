@@ -59,16 +59,12 @@ static GLint nsphere1;
 static GLuint limit;
 static GLuint count = 1;
 
-int filled_vertices = 0;
-
 static void draw(void) {
 
   static GLfloat white[4] =
     {1.0, 1.0, 1.0, 1.0};
   static GLfloat blue[4] =
     {0.0, 0.0, 1.0, 1.0};
-
-  int drawarrays = 1;
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -78,18 +74,10 @@ static void draw(void) {
   glRotatef(view_roty, 0.0, 1.0, 0.0);
   glRotatef(view_rotz, 0.0, 0.0, 1.0);
 
-  if (drawarrays) {
-
-    glPushMatrix();
-    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, blue);
-
-    glRotatef(angle, 0.0, 1.0, 0.0);
-    glScalef(0.5, 0.5, 0.5);
-    glCallList(nsphere1);
-
-    glPopMatrix();
-
-  }
+  glPushMatrix();
+  glRotatef(angle, 0.0, 1.0, 0.0);
+  glCallList(nsphere1);
+  glPopMatrix();
 
   glPopMatrix();
 
@@ -163,17 +151,18 @@ reshape(int width, int height)
   glViewport(0, 0, (GLint) width, (GLint) height);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glFrustum(-1.0, 1.0, -h, h, 5.0, 60.0);
+  glFrustum(-1.0, 1.0, -h, h, 3.0, 20.0);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  glTranslatef(0.0, 0.0, -40.0);
+  glTranslatef(0.0, 0.0, -7.0);
 }
 
-static void
-init(void)
+static void init(GLfloat *vertices, GLfloat *colors, int filled_vertices)
 {
-  static GLfloat pos[4] =
-  {5.0, 5.0, 10.0, 0.0};
+  static GLfloat pos1[4] =
+  {2.5, 2.5, -5.0, 0.0};
+  static GLfloat pos2[4] =
+  {-2.5, 2.5, -3.0, 0.0};
   static GLfloat red[4] =
   {0.8, 0.1, 0.0, 1.0};
   static GLfloat green[4] =
@@ -181,23 +170,33 @@ init(void)
   static GLfloat blue[4] =
     {0.2, 0.2, 1.0, 1.0};
 
-  glLightfv(GL_LIGHT0, GL_POSITION, pos);
+  static GLfloat light_color0[4] = { 1.0, 1.0, 1.0, 1.0 };
+  static GLfloat light_color1[4] = { 0.0, 0.0, 1.0, 1.0 };
+
+  glLightfv(GL_LIGHT0, GL_POSITION, pos1);
+  glLightfv(GL_LIGHT1, GL_POSITION, pos2);
+
   glEnable(GL_CULL_FACE);
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
+  glEnable(GL_LIGHT1);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color0);
+  glLightfv(GL_LIGHT1, GL_DIFFUSE, light_color1);
+
   glEnable(GL_DEPTH_TEST);
 
   nsphere1 = glGenLists(1);
   glNewList(nsphere1, GL_COMPILE);
-  glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, blue);
 
   glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_COLOR_ARRAY);
 
-  glVertexPointer(3, GL_FLOAT, 0, cp.set);
-  // glColorPointer(3, GL_UNSIGNED_INT, 0, colors);
-  glTranslatef(-3.0, -2.0, 0.0);
-  glDrawArrays(GL_POINTS, 3, filled_vertices);
-  
+  glVertexPointer(3, GL_FLOAT, 0, vertices);
+  glColorPointer(4, GL_FLOAT, 0, colors);
+
+  glDrawArrays(GL_POINTS, 3, filled_vertices);  
+
+  glDisableClientState(GL_COLOR_ARRAY);
   glDisableClientState(GL_VERTEX_ARRAY);
 
   glEndList();
@@ -214,6 +213,35 @@ visible(int vis)
     glutIdleFunc(NULL);
 }
 
+static int prepare_colors(GLfloat *vertices, int filled_vertices, GLfloat **colors) {
+
+  GLfloat *c, *end;
+
+  assert(vertices!=NULL && filled_vertices > 0);
+
+  assert(colors!=NULL);
+
+  c = malloc(4 * sizeof(GLfloat) * filled_vertices);
+  if (c == NULL) {
+    fprintf(stderr, "%s: Trouble with malloc for color array.\n", __FUNCTION__);
+    return -1;
+  }
+
+  *colors = c;
+  
+  for (end = c + 4 * filled_vertices; c < end; ) {
+
+    *c++ = *vertices++;
+    *c++ = *vertices++;
+    *c++ = *vertices++;
+    *c++ = 1.0;
+
+  }
+
+  return 0;
+
+}
+
 int main(int argc, char *argv[]) {
 
   struct nsphere n;
@@ -222,7 +250,9 @@ int main(int argc, char *argv[]) {
 
   int num_vertices = argc>2 ? strtol(argv[2], NULL, 10) : 8000;
 
-  GLfloat *vertices;
+  GLfloat *vertices, *colors;
+
+  int filled_vertices = 0;
 
   int retval;
 
@@ -253,7 +283,13 @@ int main(int argc, char *argv[]) {
     return -1;    
   }
 
-  init();
+  retval = prepare_colors(vertices, filled_vertices, &colors);
+  if (retval == -1) {
+    fprintf(stderr, "%s: Trouble with color preparation from filled vertices.\n", __FUNCTION__);
+    return -1;
+  }
+
+  init(vertices, colors, filled_vertices);
 
   glutDisplayFunc(draw);
   glutReshapeFunc(reshape);

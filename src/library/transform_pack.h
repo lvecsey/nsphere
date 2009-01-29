@@ -5,11 +5,13 @@
 
 #include "sample_fill.h"
 
+#define HAVE_PREFILL 0x1
+
 struct transform_pack {
 
   double X[3];
   double srange;
-  double *x, *xend;
+  int n;
 
   struct sample_fill samp;
 
@@ -20,16 +22,13 @@ struct transform_pack {
   int lag;
 
   int jcount;
+  int icount;
+
+  unsigned long state;
 
 };
 
 void init_transform_pack(struct transform_pack *t);
-
-#define transform_assert1(t) ( (t)->x >= t->X )
-#define transform_assert2(t) ( (t)->x <= (t)->X + (sizeof((t)->X) / sizeof(double)) )
-#define transform_assert3(t) ( (t)->xend == (t)->X + (sizeof((t)->X) / sizeof(double)) )
-
-#define assert_transform_pack( t ) assert( transform_assert1(t) && transform_assert2(t) && transform_assert3(t) )
 
 #endif
 

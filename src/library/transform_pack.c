@@ -14,9 +14,11 @@ void init_transform_pack(struct transform_pack *t) {
   t->sr = 0;
   t->skip = 0;
   t->jcount = 0;
+  t->icount = 0;
 
-  t->x = t->X;
-  t->xend = t->X + (sizeof(t->X) / sizeof(double));
+  t->n = 0;
+
+  t->state = 0;
 
 }
 
