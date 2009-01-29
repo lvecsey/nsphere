@@ -157,7 +157,7 @@ reshape(int width, int height)
   glTranslatef(0.0, 0.0, -7.0);
 }
 
-static void init(GLfloat *vertices, GLfloat *colors, int filled_vertices)
+static void init(GLfloat *vertices, GLfloat *colors, GLfloat *normals, int filled_vertices)
 {
   static GLfloat pos1[4] =
   {2.5, 2.5, -5.0, 0.0};
@@ -190,18 +190,20 @@ static void init(GLfloat *vertices, GLfloat *colors, int filled_vertices)
 
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_COLOR_ARRAY);
+  glEnableClientState(GL_NORMAL_ARRAY);
 
   glVertexPointer(3, GL_FLOAT, 0, vertices);
   glColorPointer(4, GL_FLOAT, 0, colors);
+  glNormalPointer(GL_FLOAT, 0, normals);
 
   glDrawArrays(GL_POINTS, 3, filled_vertices);  
 
+  glDisableClientState(GL_NORMAL_ARRAY);
   glDisableClientState(GL_COLOR_ARRAY);
   glDisableClientState(GL_VERTEX_ARRAY);
 
   glEndList();
-
-  glEnable(GL_NORMALIZE);
+ 
 }
 
 void 
@@ -242,6 +244,40 @@ static int prepare_colors(GLfloat *vertices, int filled_vertices, GLfloat **colo
 
 }
 
+static int prepare_normals(GLfloat *vertices, int filled_vertices, GLfloat **normals) {
+
+  GLfloat *n, *end;
+
+  assert(vertices!=NULL && filled_vertices > 0);
+
+  assert(normals!=NULL);
+
+  n = malloc(3 * sizeof(GLfloat) * filled_vertices);
+  if (n == NULL) {
+    fprintf(stderr, "%s: Trouble with malloc for normal array.\n", __FUNCTION__);
+    return -1;
+  }
+
+  *normals = n;
+  
+  for (end = n + 3 * filled_vertices; n < end; ) {
+    
+    double scale_factor = sqrt(vertices[0] * vertices[0] + vertices[1] * vertices[1] + vertices[2] * vertices[2]);
+
+    if (scale_factor < 0.75) {
+      scale_factor -= 1.0;
+    }
+
+    *n++ = *vertices++ / scale_factor;
+    *n++ = *vertices++ / scale_factor;
+    *n++ = *vertices++ / scale_factor;
+
+  }
+
+  return 0;
+
+}
+
 int main(int argc, char *argv[]) {
 
   struct nsphere n;
@@ -250,7 +286,7 @@ int main(int argc, char *argv[]) {
 
   int num_vertices = argc>2 ? strtol(argv[2], NULL, 10) : 8000;
 
-  GLfloat *vertices, *colors;
+  GLfloat *vertices, *colors, *normals;
 
   int filled_vertices = 0;
 
@@ -289,7 +325,13 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  init(vertices, colors, filled_vertices);
+  retval = prepare_normals(vertices, filled_vertices, &normals);
+  if (retval == -1) {
+    fprintf(stderr, "%s: Trouble with normal preparation from filled vertices.\n", __FUNCTION__);
+    return -1;
+  }
+
+  init(vertices, colors, normals, filled_vertices);
 
   glutDisplayFunc(draw);
   glutReshapeFunc(reshape);
