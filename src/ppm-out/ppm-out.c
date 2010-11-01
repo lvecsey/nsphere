@@ -291,7 +291,11 @@ static int write_image(int fd, unsigned char *i, int w, int h) {
     return -1;
   }
 
-  write(fd, i, 3*width*height);
+  retval = write(fd, i, 3*width*height);
+  if (retval != 3*width*height) {
+    printf("%s: Partial write for image data.\n", __FUNCTION__);
+    return -1;
+  }
 
   return 0;
 
@@ -313,7 +317,7 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  fd = open("out1.ppm", O_CREAT|O_WRONLY);
+  fd = open("out1.ppm", O_CREAT|O_WRONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if(fd==-1) {
     fprintf(stderr, "Problem with open for write. retval=%d\n", fd);
     exit(EXIT_FAILURE);

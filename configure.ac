@@ -10,6 +10,8 @@ AC_CHECK_HEADER(stdio.h,[AC_DEFINE(HAVE_STDIO_H)],[AC_MSG_ERROR([Sorry, can't do
 
 AC_CONFIG_SRCDIR([src/nsphere.c])
 
+AC_CONFIG_MACRO_DIR([m4])
+
 AC_PROG_LIBTOOL
 
 AM_PROG_CC_C_O
@@ -18,6 +20,10 @@ AC_FUNC_MALLOC
 
 AC_CHECK_LIB(X11, XOpenDisplay)
 AC_CHECK_LIB(GL, glXChooseVisual)
+AC_CHECK_LIB(glut, glutSwapBuffers, [], [
+		   echo "Error! Please try sudo apt-get install freeglut3-dev"
+		   exit -1
+		   ])
 
 AC_CHECK_HEADERS(malloc.h)
 AC_CHECK_HEADERS(assert.h)

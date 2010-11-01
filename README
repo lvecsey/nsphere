@@ -1,6 +1,12 @@
+Show the randomness of a given file visually with OpenGL (snow globe)
 
+libtoolize
 autoreconf --force --install
-./configure ; make
+mkdir decimate ; cd decimate
+../configure --prefix=$HOME/nsphere-git
+make check
+make install
+
 src/nsphere /path/to/datafile 64000
 
 The above example will plot with 64000 points, and rotate the sphere for you. By default it will plot 8000 points.
