@@ -49,6 +49,8 @@
 
 #include "verbose_read.h"
 
+#include "capframe.h"
+
 static GLfloat view_rotx = 20.0, view_roty = 30.0, view_rotz = 0.0;
 static GLfloat angle = 0.0;
 
@@ -57,6 +59,8 @@ static GLint nsphere1;
 uint64_t max_frames;
 
 uint64_t count = 0;
+
+capframe cf;
 
 void draw(void) {
 
@@ -78,6 +82,10 @@ void draw(void) {
 
   glPopMatrix();
 
+  if (cf.state == CF_ONESHOT) {
+    process_capframe(&cf);
+  }
+  
   glutSwapBuffers();
 
   count++;
@@ -287,6 +295,8 @@ int main(int argc, char *argv[]) {
 
   long int num_frames;
 
+  long int xres, yres;
+
   filled_vertices = 0;
   
   tp = &(ns.tp);
@@ -301,11 +311,22 @@ int main(int argc, char *argv[]) {
 
   }
 
+  xres = 1280;
+  yres = 720;
+  
+  if (getenv("CAPFRAME") != NULL) {
+
+    cf = init_capframe(xres, yres, "/tmp/output_nsphere");
+    
+  }
+  
   glutInit(&argc, argv);
   num_frames = argc>3 ? strtol(argv[3],NULL,10) : 0;
   max_frames = num_frames;
   glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
 
+  glutInitWindowSize(xres, yres);
+  
   glutCreateWindow("nsphere");
 
   retval = prepare_vertices(filename, tp, num_vertices, &vertices, &filled_vertices, NULL);

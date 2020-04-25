@@ -16,3 +16,7 @@ src/ppm-out/nsphere-ppm -3 /path/to/datafile
 display ./out1.ppm
 
 See 'original.txt' for the file that nsphere-ppm and this entire project is based on.
+
+[Sample image](https://phrasep.com/~lvecsey/software/nsphere/output_nsphere.png)
+
+![Image of output](https://phrasep.com/~lvecsey/software/nsphere/output_nsphere.png)
