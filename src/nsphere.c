@@ -26,9 +26,7 @@
 #include <stdlib.h>
 #include <GL/glut.h>
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
+#include <math.h>
 
 #include "polar.h"
 #include "cartesian.h"
@@ -47,7 +45,7 @@
 
 #include "prepare_vertices.h"
 
-#include "spit_prepare.h"
+#include "csv_prepare.h"
 
 #include "verbose_read.h"
 
@@ -56,15 +54,14 @@ static GLfloat angle = 0.0;
 
 static GLint nsphere1;
 
-static GLuint limit;
-static GLuint count = 1;
+uint64_t max_frames;
 
-static void draw(void) {
+uint64_t count = 0;
 
-  static GLfloat white[4] =
-    {1.0, 1.0, 1.0, 1.0};
-  static GLfloat blue[4] =
-    {0.0, 0.0, 1.0, 1.0};
+void draw(void) {
+
+  GLfloat white[4] = {1.0, 1.0, 1.0, 1.0};
+  GLfloat blue[4] = {0.0, 0.0, 1.0, 1.0};
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -84,9 +81,10 @@ static void draw(void) {
   glutSwapBuffers();
 
   count++;
-  if (count == limit) {
-    exit(0);
+  if (count == max_frames) {
+    exit(EXIT_SUCCESS);
   }
+
 }
 
 static void idle(void) {
@@ -97,11 +95,8 @@ static void idle(void) {
 
 }
 
-/* change view angle, exit upon ESC */
-/* ARGSUSED1 */
-static void
-key(unsigned char k, int x, int y)
-{
+void key(unsigned char k, int x, int y) {
+
   switch (k) {
   case 'z':
     view_rotz += 5.0;
@@ -109,20 +104,19 @@ key(unsigned char k, int x, int y)
   case 'Z':
     view_rotz -= 5.0;
     break;
-  case 27:  /* Escape */
-    exit(0);
+  case 27:
+    exit(EXIT_SUCCESS);
     break;
   default:
     return;
   }
+
   glutPostRedisplay();
+
 }
 
-/* change view angle */
-/* ARGSUSED1 */
-static void
-special(int k, int x, int y)
-{
+void special(int k, int x, int y) {
+
   switch (k) {
   case GLUT_KEY_UP:
     view_rotx += 5.0;
@@ -142,10 +136,8 @@ special(int k, int x, int y)
   glutPostRedisplay();
 }
 
-/* new window size or exposure */
-static void
-reshape(int width, int height)
-{
+void reshape(int width, int height) {
+
   GLfloat h = (GLfloat) height / (GLfloat) width;
 
   glViewport(0, 0, (GLint) width, (GLint) height);
@@ -155,20 +147,16 @@ reshape(int width, int height)
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   glTranslatef(0.0, 0.0, -7.0);
+
 }
 
-static void init(GLfloat *vertices, GLfloat *colors, GLfloat *normals, int filled_vertices)
+int init(GLfloat *vertices, GLfloat *colors, GLfloat *normals, int filled_vertices)
 {
-  static GLfloat pos1[4] =
-  {2.5, 2.5, -5.0, 0.0};
-  static GLfloat pos2[4] =
-  {-2.5, 2.5, -3.0, 0.0};
-  static GLfloat red[4] =
-  {0.8, 0.1, 0.0, 1.0};
-  static GLfloat green[4] =
-  {0.0, 0.8, 0.2, 1.0};
-  static GLfloat blue[4] =
-    {0.2, 0.2, 1.0, 1.0};
+  static GLfloat pos1[4] = {2.5, 2.5, -5.0, 0.0};
+  static GLfloat pos2[4] = {-2.5, 2.5, -3.0, 0.0};
+  static GLfloat red[4] = {0.8, 0.1, 0.0, 1.0};
+  static GLfloat green[4] = {0.0, 0.8, 0.2, 1.0};
+  static GLfloat blue[4] = {0.2, 0.2, 1.0, 1.0};
 
   static GLfloat light_color0[4] = { 1.0, 1.0, 1.0, 1.0 };
   static GLfloat light_color1[4] = { 0.0, 0.0, 1.0, 1.0 };
@@ -203,40 +191,39 @@ static void init(GLfloat *vertices, GLfloat *colors, GLfloat *normals, int fille
   glDisableClientState(GL_VERTEX_ARRAY);
 
   glEndList();
- 
+
+  return 0;
+  
 }
 
-void 
-visible(int vis)
-{
-  if (vis == GLUT_VISIBLE)
-    glutIdleFunc(idle);
-  else
-    glutIdleFunc(NULL);
+void visible(int vis) {
+
+  glutIdleFunc( vis == GLUT_VISIBLE ? idle : NULL );
+  
 }
 
-static int prepare_colors(GLfloat *vertices, int filled_vertices, GLfloat **colors) {
+int prepare_colors(GLfloat *vertices, long int filled_vertices, GLfloat **colors) {
 
-  GLfloat *c, *end;
+  GLfloat *cp, *end;
 
   assert(vertices!=NULL && filled_vertices > 0);
 
   assert(colors!=NULL);
 
-  c = malloc(4 * sizeof(GLfloat) * filled_vertices);
-  if (c == NULL) {
+  cp = malloc(4 * sizeof(GLfloat) * filled_vertices);
+  if (cp == NULL) {
     fprintf(stderr, "%s: Trouble with malloc for color array.\n", __FUNCTION__);
     return -1;
   }
 
-  *colors = c;
+  *colors = cp;
   
-  for (end = c + 4 * filled_vertices; c < end; ) {
+  for (end = cp + 4 * filled_vertices; cp < end; ) {
 
-    *c++ = *vertices++;
-    *c++ = *vertices++;
-    *c++ = *vertices++;
-    *c++ = 1.0;
+    *cp++ = *vertices++;
+    *cp++ = *vertices++;
+    *cp++ = *vertices++;
+    *cp++ = 1.0;
 
   }
 
@@ -244,33 +231,35 @@ static int prepare_colors(GLfloat *vertices, int filled_vertices, GLfloat **colo
 
 }
 
-static int prepare_normals(GLfloat *vertices, int filled_vertices, GLfloat **normals) {
+int prepare_normals(GLfloat *vertices, long int filled_vertices, GLfloat **normals) {
 
-  GLfloat *n, *end;
+  GLfloat *np, *end;
 
+  double sf;
+  
   assert(vertices!=NULL && filled_vertices > 0);
 
   assert(normals!=NULL);
 
-  n = malloc(3 * sizeof(GLfloat) * filled_vertices);
-  if (n == NULL) {
+  np = malloc(3 * sizeof(GLfloat) * filled_vertices);
+  if (np == NULL) {
     fprintf(stderr, "%s: Trouble with malloc for normal array.\n", __FUNCTION__);
     return -1;
   }
 
-  *normals = n;
+  *normals = np;
   
-  for (end = n + 3 * filled_vertices; n < end; ) {
+  for (end = np + 3 * filled_vertices; np < end; ) {
     
-    double scale_factor = sqrt(vertices[0] * vertices[0] + vertices[1] * vertices[1] + vertices[2] * vertices[2]);
+    sf = sqrt(vertices[0] * vertices[0] + vertices[1] * vertices[1] + vertices[2] * vertices[2]);
 
-    if (scale_factor < 0.75) {
-      scale_factor -= 1.0;
+    if (sf < 0.75) {
+      sf -= 1.0;
     }
 
-    *n++ = *vertices++ / scale_factor;
-    *n++ = *vertices++ / scale_factor;
-    *n++ = *vertices++ / scale_factor;
+    *np++ = *vertices++ / sf;
+    *np++ = *vertices++ / sf;
+    *np++ = *vertices++ / sf;
 
   }
 
@@ -280,40 +269,46 @@ static int prepare_normals(GLfloat *vertices, int filled_vertices, GLfloat **nor
 
 int main(int argc, char *argv[]) {
 
-  struct nsphere n;
+  nsphere ns;
 
-  char *filename = argc>1 ? argv[1] : "infile.dat";
+  char *def_fn = "infile.dat";
+  
+  char *filename = argc>1 ? argv[1] : def_fn;
 
-  int num_vertices = argc>2 ? strtol(argv[2], NULL, 10) : 8000;
+  long int num_vertices = argc>2 ? strtol(argv[2], NULL, 10) : 8000;
 
   GLfloat *vertices, *colors, *normals;
 
-  int filled_vertices = 0;
+  long int filled_vertices;
 
   int retval;
 
-  init_transform_pack(&n.t);
+  transform_pack *tp;
 
-  if (getenv("NSPHERE_SPIT") != NULL) {
+  long int num_frames;
+
+  filled_vertices = 0;
+  
+  tp = &(ns.tp);
+  
+  init_transform_pack(tp);
+
+  if (getenv("NSPHERE_SPIT") != NULL || getenv("NSPHERE_CSV") != NULL) {
     
-    spit_prepare(filename, &n.t, num_vertices, &vertices, &filled_vertices, NULL);
+    csv_prepare(filename, tp, num_vertices, &vertices, &filled_vertices, NULL);
     
     return 0;
 
   }
 
   glutInit(&argc, argv);
-  if (argc > 1) {
-    /* do 'n' frames then exit */
-    limit = atoi(argv[1]) + 1;
-  } else {
-    limit = 0;
-  }
+  num_frames = argc>3 ? strtol(argv[3],NULL,10) : 0;
+  max_frames = num_frames;
   glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
 
   glutCreateWindow("nsphere");
 
-  retval = prepare_vertices(filename, &n.t, num_vertices, &vertices, &filled_vertices, NULL);
+  retval = prepare_vertices(filename, tp, num_vertices, &vertices, &filled_vertices, NULL);
   if (retval==-1) {
     fprintf(stderr, "%s: Trouble with collective calls to prepare vertices.\n", __FUNCTION__);
     return -1;    
@@ -331,7 +326,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  init(vertices, colors, normals, filled_vertices);
+  retval = init(vertices, colors, normals, filled_vertices);
 
   glutDisplayFunc(draw);
   glutReshapeFunc(reshape);
@@ -341,5 +336,6 @@ int main(int argc, char *argv[]) {
 
   glutMainLoop();
 
-  return 0;             /* ANSI C requires main to return int. */
+  return 0;
+
 }

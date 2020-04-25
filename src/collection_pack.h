@@ -6,13 +6,13 @@
 
 #include "cartesian.h"
 
-struct collection_pack {
+typedef struct {
 
-  struct cartesian *set, *pointer, *end;
+  cartesian *set, *pointer, *end;
   
-};
+} collection_pack;
 
-extern struct collection_pack cp;
+extern collection_pack cp;
 
 #endif
 

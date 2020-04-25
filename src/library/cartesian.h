@@ -1,11 +1,11 @@
 #ifndef CARTESIAN_H
 #define CARTESIAN_H
 
-struct cartesian {
+typedef struct {
   
   double x, y, z;
   unsigned color;
 
-};
+} cartesian;
 
 #endif

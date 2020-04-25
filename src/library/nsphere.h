@@ -8,19 +8,19 @@
 
 #include "transform_pack.h"
 
-struct nsphere {
+typedef struct {
 
   GLfloat default_color[4];
 
   int triple;
 
-  struct rotation_pack rp;
+  rotation_pack rp;
 
   int MidA, MidB, MidC, MidY, Scale;
 
-  struct transform_pack t;
+  transform_pack tp;
 
-};
+} nsphere;
 
 #define project(x) (ceil(Scale * x))
 

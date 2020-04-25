@@ -7,7 +7,9 @@
 
 #include "polar_collect.h"
 
-int polar_collect(struct polar *p) {
+#include "coordinate_conversion.h"
+
+int polar_collect(polar *p) {
 
   assert(p!=NULL);
 

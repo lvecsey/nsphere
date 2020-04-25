@@ -1,3 +1,7 @@
+2020-04-25	Lester Vecsey <lvecsey-nsphere@phrasep.com>
+	* import ga.c code for rotation and use more typedefs
+	* use csv_prepare function naming for outputting values (optional)
+
 2009-01-25      Lester Vecsey <lvecsey-nsphere@phrasep.com>
 
         * Initial re-import for GPL code release

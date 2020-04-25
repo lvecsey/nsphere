@@ -3,6 +3,6 @@
 
 #include "polar.h"
 
-int polar_collect(struct polar *p);
+int polar_collect(polar *p);
 
 #endif

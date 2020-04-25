@@ -17,15 +17,15 @@
 
 #include "gen_vertexarray.h"
 
-int prepare_vertices(char *filename, struct transform_pack *t, int num_vertices, GLfloat **vertices, int *filled_vertices, read_status_t read_status) {
+int prepare_vertices(char *filename, transform_pack *tp, long int num_vertices, GLfloat **vertices, long int *filled_vertices, read_statusfunc read_status) {
 
   GLfloat *v;
 
   int retval;
 
-  assert(filename!=NULL && t!=NULL && num_vertices>0 && vertices!=NULL);
+  assert(filename!=NULL && tp!=NULL && num_vertices>0 && vertices!=NULL);
 
-  cp.set = malloc(sizeof(struct cartesian) * num_vertices);
+  cp.set = malloc(sizeof(cartesian) * num_vertices);
   if (cp.set == NULL) {
     fprintf(stderr, "%s: Trouble with malloc for cartesian vertices.\n", __FUNCTION__);
     return -1;
@@ -34,7 +34,7 @@ int prepare_vertices(char *filename, struct transform_pack *t, int num_vertices,
   cp.pointer = cp.set;
   cp.end = cp.set + num_vertices;
 
-  retval = plot_file(filename, t, polar_collect, read_status);
+  retval = plot_file(filename, tp, polar_collect, read_status);
   if (retval == -1) {
     fprintf(stderr, "%s: Trouble with plot_file to polar_collect.\n", __FUNCTION__);
     return -1;

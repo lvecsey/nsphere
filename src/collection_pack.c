@@ -3,5 +3,5 @@
 
 #include "collection_pack.h"
 
-struct collection_pack cp;
+collection_pack cp;
 

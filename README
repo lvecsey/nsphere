@@ -1,8 +1,7 @@
 Show the randomness of a given file visually with OpenGL (snow globe)
 
-libtoolize
-autoreconf --force --install
-mkdir decimate ; cd decimate
+./autogen.sh
+mkdir build ; cd build
 ../configure --prefix=$HOME/nsphere-git
 make check
 make install

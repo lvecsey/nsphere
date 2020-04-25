@@ -7,17 +7,15 @@
 
 #include "collection_pack.h"
 
-static void show_cartesian(struct cartesian *c) {
-
-  assert(c!=NULL);
+void show_cartesian(cartesian *c) {
 
   printf("%s: %f %f %f\n", __FUNCTION__, c->x, c->y, c->z);
 
 }
 
-int gen_vertexarray(struct collection_pack *i, GLfloat *vertices, int num_vertices, int *filled_vertices) {
+int gen_vertexarray(collection_pack *i, GLfloat *vertices, long int num_vertices, long int *filled_vertices) {
 
-  struct cartesian *c;
+  cartesian *c;
   
   GLfloat *gend = vertices + 3 * num_vertices;
 

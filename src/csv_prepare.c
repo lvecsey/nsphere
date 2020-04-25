@@ -9,23 +9,25 @@
 
 #include "transform_pack.h"
 
-int spit_prepare(char *filename, struct transform_pack *t, int num_vertices, GLfloat **vertices, int *filled_vertices, read_status_t read_status) {
-
+int csv_prepare(char *filename, transform_pack *tp, long int num_vertices, GLfloat **vertices, long int *filled_vertices, read_statusfunc read_status) {
+  
   GLfloat *v;
 
   int retval;
 
   int count;
 
-  retval = prepare_vertices(filename, t, num_vertices, vertices, filled_vertices, read_status);
+  retval = prepare_vertices(filename, tp, num_vertices, vertices, filled_vertices, read_status);
   if (retval==-1) {
     fprintf(stderr, "%s: Trouble with collective calls to prepare vertices.\n", __FUNCTION__);
     return -1;    
   }
 
+  printf("X, Y, Z\n");
+  
   for (v = *vertices, count = 0; count < *filled_vertices; count++, v+=3) {
 
-    printf("[%d]: %f,%f,%f\n", count, v[0], v[1], v[2]);
+    printf("%f, %f, %f\n", count, v[0], v[1], v[2]);
 
   }
 

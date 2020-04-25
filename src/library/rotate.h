@@ -3,6 +3,8 @@
 
 #include "cartesian.h"
 
-void rotate(struct rotation_pack *rp, struct cartesian *c);
+#include "rotation_pack.h"
+
+void rotate(rotation_pack *rp, cartesian *c);
 
 #endif

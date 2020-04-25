@@ -1,8 +1,8 @@
 #ifndef POLAR_H
 #define POLAR_H
 
-struct polar {
+typedef struct {
   double r, theta, phi;
-};
+} polar;
 
 #endif

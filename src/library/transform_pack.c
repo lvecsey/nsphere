@@ -1,24 +1,21 @@
 #include <stdio.h>
-#include <assert.h>
 
 #include "transform_pack.h"
 
-void init_transform_pack(struct transform_pack *t) {
+void init_transform_pack(transform_pack *tp) {
 
-  assert(t!=NULL);
+  tp->samp.filled_bytes = 0;
 
-  t->samp.filled_bytes = 0;
+  tp->mode = 0;
+  tp->lag = 1;
+  tp->sr = 0;
+  tp->skip = 0;
+  tp->jcount = 0;
+  tp->icount = 0;
 
-  t->mode = 0;
-  t->lag = 1;
-  t->sr = 0;
-  t->skip = 0;
-  t->jcount = 0;
-  t->icount = 0;
+  tp->n = 0;
 
-  t->n = 0;
-
-  t->state = 0;
+  tp->state = 0;
 
 }
 

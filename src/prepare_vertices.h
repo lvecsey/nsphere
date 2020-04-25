@@ -7,6 +7,6 @@
 
 #include "read_status.h"
 
-int prepare_vertices(char *filename, struct transform_pack *t, int num_vertices, GLfloat **vertices, int *filled_vertices, read_status_t read_status);
+int prepare_vertices(char *filename, transform_pack *tp, long int num_vertices, GLfloat **vertices, long int *filled_vertices, read_statusfunc read_status);
 
 #endif

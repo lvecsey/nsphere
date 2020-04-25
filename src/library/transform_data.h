@@ -5,6 +5,8 @@
 
 #include "transform_pack.h"
 
-int transform_data(struct transform_pack *t, char *buf, int len, struct polar *p, struct polar **pend);
+#include "polar.h"
+
+int transform_data(transform_pack *tp, char *buf, int len, polar *p, polar **pend);
 
 #endif

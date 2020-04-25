@@ -3,17 +3,19 @@
 
 #include <assert.h>
 
+#include <stdint.h>
+
 #include "sample_fill.h"
 
 #define HAVE_PREFILL 0x1
 
-struct transform_pack {
+typedef struct {
 
   double X[3];
   double srange;
   int n;
 
-  struct sample_fill samp;
+  sample_fill samp;
 
   int mode;
 
@@ -24,11 +26,11 @@ struct transform_pack {
   int jcount;
   int icount;
 
-  unsigned long state;
+  uint64_t state;
 
-};
+} transform_pack;
 
-void init_transform_pack(struct transform_pack *t);
+void init_transform_pack(transform_pack *tp);
 
 #endif
 

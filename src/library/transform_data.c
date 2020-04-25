@@ -3,35 +3,35 @@
 
 #include <math.h>
 
+#include <stdint.h>
+
 #include "polar.h"
 
 #include "sample_fill.h"
 
 #include "transform_pack.h"
 
-static void apply_polar(struct polar *p, struct transform_pack *t) {
+static void apply_polar(polar *p, transform_pack *tp) {
 
-  assert(p!=NULL && t!=NULL);
-
-  p->r = sqrt(t->X[(t->n+2)%3]);
-  p->theta = M_PI * t->X[(t->n+1)%3];
-  p->phi = 2 * M_PI * t->X[t->n];
+  p->r = sqrt(tp->X[(tp->n+2)%3]);
+  p->theta = M_PI * tp->X[(tp->n+1)%3];
+  p->phi = 2 * M_PI * tp->X[tp->n];
 
 }
 
-typedef int (*completion_func_t)(struct transform_pack *t, void *extra);
+typedef int (*completion_func_t)(transform_pack *tp, void *extra);
 
-static int lag_fill(char **buffer, char *bend, struct sample_fill *s, struct transform_pack *t, completion_func_t completion_func, void *extra) {
+static int lag_fill(char **buffer, char *bend, sample_fill *s, transform_pack *tp, completion_func_t completion_func, void *extra) {
 
   char *buf;
 
   int j;
 
-  assert(t!=NULL);
-
+  assert(tp != NULL);
+  
   buf = *buffer;
 
-  for (j = t->jcount; j < t->lag; j++) {
+  for (j = tp->jcount; j < tp->lag; j++) {
 
     if (!s->filled_bytes) {
 
@@ -40,10 +40,10 @@ static int lag_fill(char **buffer, char *bend, struct sample_fill *s, struct tra
 
     }
 
-    if (t->mode && s->filled_bytes==1) {
+    if (tp->mode && s->filled_bytes==1) {
 
       if (buf < bend) {
-	s->sample |= ((SAMPLE)((unsigned char)*buf) << SHIFTS);
+	s->sample |= ((uint64_t)((unsigned char)*buf) << SHIFTS);
 	s->filled_bytes++;
 	buf++;
       }
@@ -57,54 +57,54 @@ static int lag_fill(char **buffer, char *bend, struct sample_fill *s, struct tra
 
   *buffer = buf;
 
-  t->jcount = (j == t->lag) ? 0 : j;
+  tp->jcount = (j == tp->lag) ? 0 : j;
 
   return 0;
 
 }
 
-static int preload_fill(char **buffer, char *bend, struct sample_fill *s, struct transform_pack *t, completion_func_t completion_func, void *extra) {
+static int preload_fill(char **buffer, char *bend, sample_fill *s, transform_pack *tp, completion_func_t completion_func, void *extra) {
 
   int i;
 
-  assert(t!=NULL);
+  assert(tp!=NULL);
 
-  for (i = t->icount; i < 3; i++) {
+  for (i = tp->icount; i < 3; i++) {
 
-    lag_fill(buffer, bend, s, t, completion_func, extra);
+    lag_fill(buffer, bend, s, tp, completion_func, extra);
 
   }
 
   assert(i <= 3);
 
   if (i == 3) {
-    t->state |= HAVE_PREFILL;
+    tp->state |= HAVE_PREFILL;
   }
 
   return 0;
 
 }
 
-static int process_point(char **buffer, char *bend, struct sample_fill *s, struct transform_pack *t, completion_func_t completion_func, void *extra) {
+static int process_point(char **buffer, char *bend, sample_fill *s, transform_pack *tp, completion_func_t completion_func, void *extra) {
 
-  assert(t!=NULL && s!=NULL);
+  assert(tp!=NULL && s!=NULL);
 
   assert(completion_func != NULL);
 
-  t->X[t->n] = (s->sample == 0) ? 0 : s->sample / t->srange;
+  tp->X[tp->n] = (s->sample == 0) ? 0 : s->sample / tp->srange;
 
   s->filled_bytes = 0;
     
-  t->n = (t->n+1) % 3;
+  tp->n = (tp->n+1) % 3;
 
-  if (!t->sr) {
+  if (!tp->sr) {
 
-    completion_func(t, extra);
+    completion_func(tp, extra);
 
   }
     
-  if (t->skip) {
-    t->sr = (t->sr >= t->skip) ? 0 : (t->sr + 1);
+  if (tp->skip) {
+    tp->sr = (tp->sr >= tp->skip) ? 0 : (tp->sr + 1);
   }
 
   return 0;
@@ -112,27 +112,23 @@ static int process_point(char **buffer, char *bend, struct sample_fill *s, struc
 }
 
 struct polar_workpack {
-  struct polar *p;
-  struct polar *pend;
+  polar *p;
+  polar *pend;
 };
 
-static void show_transform_pack(struct transform_pack *t) {
+static void show_transform_pack(transform_pack *tp) {
 
-  assert(t!=NULL);
-
-  printf("%s: %f %f %f\n", __FUNCTION__, t->X[0], t->X[1], t->X[2]);
+  printf("%s: %f %f %f\n", __FUNCTION__, tp->X[0], tp->X[1], tp->X[2]);
 
 }
 
-static void show_polar(struct polar *p) {
-
-  assert(p!=NULL);
+static void show_polar(polar *p) {
 
   printf("%s: %f %f %f\n", __FUNCTION__, p->r, p->theta, p->phi);
 
 }
 
-static int completion_function(struct transform_pack *t, void *extra) {
+static int completion_function(transform_pack *tp, void *extra) {
 
   struct polar_workpack *pwp = (struct polar_workpack *) extra;
 
@@ -140,7 +136,7 @@ static int completion_function(struct transform_pack *t, void *extra) {
 
   assert(pwp->p < pwp->pend);
 
-  apply_polar(pwp->p, t);
+  apply_polar(pwp->p, tp);
 
   pwp->p++;
 
@@ -148,9 +144,9 @@ static int completion_function(struct transform_pack *t, void *extra) {
 
 }
 
-int transform_data(struct transform_pack *t, char *buf, int len, struct polar *p, struct polar **pend) {
+int transform_data(transform_pack *tp, char *buf, int len, polar *p, polar **pend) {
 
-  struct sample_fill *s;
+  sample_fill *s;
 
   struct polar_workpack pwp = { p, NULL };
 
@@ -158,7 +154,7 @@ int transform_data(struct transform_pack *t, char *buf, int len, struct polar *p
 
   int j;
 
-  assert(t!=NULL && t->lag >= 0);
+  assert(tp!=NULL && tp->lag >= 0);
 
   assert(buf!=NULL && len>0 && buf < bend);
 
@@ -166,29 +162,29 @@ int transform_data(struct transform_pack *t, char *buf, int len, struct polar *p
 
   assert(p < (*pend));
 
-  s = &t->samp;
+  s = &(tp->samp);
 
-  j = t->jcount;
+  j = tp->jcount;
 
   pwp.pend = *pend;
 
   while ( buf < bend ) {
 
-    if (! (t->state & HAVE_PREFILL)) {
+    if (! (tp->state & HAVE_PREFILL)) {
 
-      preload_fill(&buf, bend, s, t, completion_function, &pwp);
+      preload_fill(&buf, bend, s, tp, completion_function, &pwp);
 
       continue;
 
     }
 
-    if ((t->mode && s->filled_bytes==2) || ((!t->mode) && s->filled_bytes==1)) {
+    if ((tp->mode && s->filled_bytes==2) || ((!tp->mode) && s->filled_bytes==1)) {
 
-      process_point(&buf, bend, s, t, completion_function, &pwp);
+      process_point(&buf, bend, s, tp, completion_function, &pwp);
 
     }
 
-    lag_fill(&buf, bend, s, t, completion_function, &pwp);
+    lag_fill(&buf, bend, s, tp, completion_function, &pwp);
 
   }
 
@@ -198,7 +194,7 @@ int transform_data(struct transform_pack *t, char *buf, int len, struct polar *p
 
   }
 
-  t->jcount = j;
+  tp->jcount = j;
 
   return 0;
 

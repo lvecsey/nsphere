@@ -7,6 +7,6 @@
 
 #include "read_status.h"
 
-int plot_file(char *filename, struct transform_pack *t, int (*callback_polar)(struct polar *p), read_status_t read_status);
+int plot_file(char *filename, transform_pack *tp, int (*callback_polar)(polar *p), read_statusfunc read_status);
 
 #endif

@@ -16,7 +16,7 @@
 
 #include "read_status.h"
 
-int plot_file(char *filename, struct transform_pack *t, int (*callback_polar)(struct polar *p), read_status_t read_status) {
+int plot_file(char *filename, transform_pack *tp, int (*callback_polar)(polar *p), read_statusfunc read_status) {
 
   int fd, transform_retval = 0, read_retval = -1;
 
@@ -24,9 +24,9 @@ int plot_file(char *filename, struct transform_pack *t, int (*callback_polar)(st
 
   unsigned long file_position = 0;
 
-  struct polar p[4096];
+  polar p[4096];
 
-  struct polar *pend;
+  polar *pend;
   
   //  InitPoints();
 
@@ -38,7 +38,7 @@ int plot_file(char *filename, struct transform_pack *t, int (*callback_polar)(st
     return -1;
   }
 
-  t->srange = t->mode ? 65536.0 : 256.0;
+  tp->srange = tp->mode ? 65536.0 : 256.0;
 
   do {
 
@@ -57,9 +57,9 @@ int plot_file(char *filename, struct transform_pack *t, int (*callback_polar)(st
 
     if (read_retval>0) {
 
-      pend = p + sizeof(p) / sizeof(struct polar);
+      pend = p + sizeof(p) / sizeof(polar);
 
-      transform_retval = transform_data(t, buf, read_retval, p, &pend);
+      transform_retval = transform_data(tp, buf, read_retval, p, &pend);
       if (transform_retval == -1) {
 	fprintf(stderr, "%s: Trouble with transform_data.\n", __FUNCTION__);
 	return -1;
@@ -67,7 +67,7 @@ int plot_file(char *filename, struct transform_pack *t, int (*callback_polar)(st
 
       if (callback_polar != NULL) {
 
-	struct polar *x = p;
+	polar *x = p;
 
 	assert (x <= pend);
 

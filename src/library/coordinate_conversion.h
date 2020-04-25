@@ -4,7 +4,7 @@
 #include "polar.h"
 #include "cartesian.h"
 
-void polar_to_cartesian(struct polar *p, struct cartesian *c);
+void polar_to_cartesian(polar *p, cartesian *c);
 
 #endif
 

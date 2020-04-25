@@ -4,6 +4,6 @@
 #include "collection_pack.h"
 #include <GL/gl.h>
 
-int gen_vertexarray(struct collection_pack *i, GLfloat *vertices, int num_vertices, int *filled_vertices);
+int gen_vertexarray(collection_pack *i, GLfloat *vertices, long int num_vertices, long int *filled_vertices);
 
 #endif

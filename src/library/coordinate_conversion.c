@@ -7,7 +7,7 @@
 #include "cartesian.h"
 
 /* Converts 3-d polar coordinates to cartesian coordinates */
-void polar_to_cartesian(struct polar *p, struct cartesian *c) {
+void polar_to_cartesian(polar *p, cartesian *c) {
 
   c->x = p->r * sin(p->phi) * cos(p->theta);
   c->y = p->r * sin(p->phi) * sin(p->theta);

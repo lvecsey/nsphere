@@ -11,7 +11,7 @@
 #include "rads.h"
 
 /* Rotate C along X, Y and Z axes */
-void rotate(struct rotation_pack *rp, struct cartesian *c) {
+void rotate2(rotation_pack *rp, cartesian *c) {
   
   double x,y,z;
 
